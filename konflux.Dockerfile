@@ -4,6 +4,7 @@ COPY --chown=1001:0 . /workspace
 WORKDIR /workspace
 # Avoid using upstream Makefile as it performs GOIMPORTS and fails downstream
 ENV GOEXPERIMENT strictfipsruntime
+ENV GOFLAGS=-buildvcs=false
 RUN go fmt ./... && go vet ./cmd/... && CGO_ENABLED=1 go build -tags strictfipsruntime -ldflags="-w -s" -o bin/addon github.com/konveyor/tackle2-addon-platform/cmd
 
 FROM registry.redhat.io/ubi9:latest
