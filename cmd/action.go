@@ -122,6 +122,7 @@ type Provider interface {
 	Use(identity *api.Identity)
 	Fetch(application *api.Application) (m *api.Manifest, err error)
 	Find(filter api.Map) (found []api.Application, err error)
+	Tag() string
 }
 
 // Engine is a template rendering engine.

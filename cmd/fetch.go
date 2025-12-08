@@ -2,6 +2,11 @@ package main
 
 import "github.com/konveyor/tackle2-hub/api"
 
+const (
+	TagSource   = "platform-discovery"
+	TagCategory = "Platform"
+)
+
 // Fetch application manifest action.
 type Fetch struct {
 	BaseAction

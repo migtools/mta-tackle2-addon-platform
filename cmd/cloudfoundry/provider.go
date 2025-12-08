@@ -98,6 +98,11 @@ func (p *Provider) Find(filter api.Map) (found []api.Application, err error) {
 	return
 }
 
+// Tag returns the platform= tag name.
+func (p *Provider) Tag() string {
+	return "Cloud Foundry"
+}
+
 // client returns a cloudfoundry client.
 func (p *Provider) client(filter Filter) (client *cfp.CloudFoundryProvider, err error) {
 	options := []cf.Option{
