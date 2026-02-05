@@ -3,7 +3,7 @@ package helm
 import (
 	liberr "github.com/jortel/go-utils/error"
 	hp "github.com/konveyor/asset-generation/pkg/providers/generators/helm"
-	"github.com/konveyor/tackle2-hub/api"
+	"github.com/konveyor/tackle2-hub/shared/api"
 )
 
 var (

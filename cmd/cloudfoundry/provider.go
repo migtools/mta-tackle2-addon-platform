@@ -5,10 +5,8 @@ import (
 
 	cf "github.com/cloudfoundry/go-cfclient/v3/config"
 	cfp "github.com/konveyor/asset-generation/pkg/providers/discoverers/cloud_foundry"
-	hub "github.com/konveyor/tackle2-hub/addon"
-	"github.com/konveyor/tackle2-hub/api"
-	"github.com/konveyor/tackle2-hub/api/jsd"
-	"github.com/konveyor/tackle2-hub/migration/json"
+	hub "github.com/konveyor/tackle2-hub/shared/addon"
+	"github.com/konveyor/tackle2-hub/shared/api"
 )
 
 var (
@@ -84,9 +82,9 @@ func (p *Provider) Find(filter api.Map) (found []api.Application, err error) {
 			}
 			r := api.Application{}
 			r.Name = appRef.AppName
-			r.Coordinates = &jsd.Document{
+			r.Coordinates = &api.Document{
 				Schema: schema.Name,
-				Content: json.Map{
+				Content: api.Map{
 					"organization": appRef.OrgName,
 					"space":        appRef.SpaceName,
 					"name":         appRef.AppName,

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/konveyor/tackle2-hub/api"
+	"github.com/konveyor/tackle2-hub/shared/api"
 )
 
 // Import applications action.

@@ -6,7 +6,7 @@ import (
 
 	"github.com/konveyor/tackle2-addon-platform/cmd/cloudfoundry"
 	"github.com/konveyor/tackle2-addon-platform/cmd/helm"
-	"github.com/konveyor/tackle2-hub/api"
+	"github.com/konveyor/tackle2-hub/shared/api"
 )
 
 // Action provides and addon action.

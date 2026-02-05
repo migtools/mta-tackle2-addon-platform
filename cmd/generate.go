@@ -11,10 +11,10 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/konveyor/tackle2-addon/scm"
-	"github.com/konveyor/tackle2-hub/api"
-	"github.com/konveyor/tackle2-hub/binding"
-	"github.com/konveyor/tackle2-hub/nas"
+	"github.com/konveyor/tackle2-hub/shared/addon/scm"
+	"github.com/konveyor/tackle2-hub/shared/api"
+	"github.com/konveyor/tackle2-hub/shared/binding"
+	"github.com/konveyor/tackle2-hub/shared/nas"
 	yaml "sigs.k8s.io/yaml/goyaml.v3"
 )
 

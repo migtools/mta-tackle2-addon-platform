@@ -1,6 +1,6 @@
 package main
 
-import "github.com/konveyor/tackle2-hub/api"
+import "github.com/konveyor/tackle2-hub/shared/api"
 
 const (
 	TagSource   = "platform-discovery"
