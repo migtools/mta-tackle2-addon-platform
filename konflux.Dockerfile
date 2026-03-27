@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi9/go-toolset:1.23 AS builder
+FROM registry.redhat.io/ubi10/go-toolset:1.23 AS builder
 COPY --chown=1001:0 . /workspace
 
 WORKDIR /workspace
@@ -7,7 +7,7 @@ ENV GOEXPERIMENT strictfipsruntime
 ENV GOFLAGS=-buildvcs=false
 RUN go fmt ./... && go vet ./cmd/... && CGO_ENABLED=1 go build -tags strictfipsruntime -ldflags="-w -s" -o bin/addon github.com/konveyor/tackle2-addon-platform/cmd
 
-FROM registry.redhat.io/ubi9:latest
+FROM registry.redhat.io/ubi10:latest
 RUN dnf -y install glibc-langpack-en openssh-clients openssl subversion git tar && dnf -y clean all
 RUN sed -i 's/^LANG=.*/LANG="en_US.utf8"/' /etc/locale.conf
 ENV LANG=en_US.utf8
