@@ -92,7 +92,7 @@ func (r *BaseAction) selectProvider(kind string) (p Provider, err error) {
 	if r.platform.Identity == nil || r.platform.Identity.ID == 0 {
 		return
 	}
-	id, err := addon.Identity.Get(r.platform.Identity.ID)
+	id, err := addon.Identity.Decrypted().Get(r.platform.Identity.ID)
 	if err != nil {
 		return
 	}

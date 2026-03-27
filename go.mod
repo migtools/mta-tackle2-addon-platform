@@ -9,7 +9,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/jortel/go-utils v0.1.5
 	github.com/konveyor/asset-generation v0.2.2
-	github.com/konveyor/tackle2-hub/shared v0.0.0-20260116161922-e4888eeed274
+	github.com/konveyor/tackle2-hub/shared v0.0.0-20260306231449-91eaaa65805c
 	github.com/onsi/gomega v1.38.2
 	sigs.k8s.io/yaml v1.4.0
 )

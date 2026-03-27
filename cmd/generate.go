@@ -52,7 +52,9 @@ func (a *Generate) Run(d *Data) (err error) {
 		return
 	}
 	identity, _, err :=
-		addon.Application.Identity(a.application.ID).Search().
+		addon.Application.Select(a.application.ID).Identity.
+			Decrypted().
+			Search().
 			Direct("asset").
 			Direct("source").
 			Indirect("source").
@@ -416,7 +418,8 @@ func (a *Generate) cloneCode() (sourceDir string, err error) {
 		return
 	}
 	identity, _, err :=
-		addon.Application.Identity(a.application.ID).Search().
+		addon.Application.Select(a.application.ID).Identity.
+			Search().
 			Direct("source").
 			Indirect("source").
 			Find()
@@ -467,7 +470,7 @@ func (a *Generate) cloneTemplates(gen *api.Generator) (templateDir string, err e
 	}
 	var identity *api.Identity
 	if gen.Identity != nil {
-		identity, err = addon.Identity.Get(gen.Identity.ID)
+		identity, err = addon.Identity.Decrypted().Get(gen.Identity.ID)
 		if err != nil {
 			err = wrap(err)
 			return
@@ -558,8 +561,10 @@ func (a *Generate) tags() (tags []string, err error) {
 // manifest returns the application manifest.
 // fallback: A file named: manifest.yaml in the source repository.
 func (a *Generate) manifest() (redacted, manifest *api.Manifest, err error) {
-	mapi := addon.Application.Manifest(a.application.ID)
-	redacted, err = mapi.Get()
+	redacted, err = addon.Application.
+		Select(a.application.ID).
+		Manifest.
+		Get()
 	if err != nil {
 		if errors.Is(err, &binding.NotFound{}) {
 			redacted, err = a.userManifest()
@@ -567,10 +572,10 @@ func (a *Generate) manifest() (redacted, manifest *api.Manifest, err error) {
 		}
 		return
 	}
-	manifest, err = addon.Manifest.Get(
-		redacted.ID,
-		binding.Param{Key: api.Injected, Value: "1"},
-		binding.Param{Key: api.Decrypted, Value: "1"})
+	manifest, err = addon.Manifest.
+		Decrypted().
+		Injected().
+		Get(redacted.ID)
 	if err != nil {
 		return
 	}
