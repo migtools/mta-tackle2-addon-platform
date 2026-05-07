@@ -10,20 +10,6 @@ var (
 	wrap = liberr.Wrap
 )
 
-type ManifestNotFound struct {
-}
-
-func (m *ManifestNotFound) Error() (s string) {
-	s = "No manifest associated with the application or found in the source repository."
-	return
-}
-
-func (e *ManifestNotFound) Is(err error) (matched bool) {
-	var inst *ManifestNotFound
-	matched = errors.As(err, &inst)
-	return
-}
-
 type RepositoryNotDefined struct {
 	Role string
 }
