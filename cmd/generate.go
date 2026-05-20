@@ -586,9 +586,10 @@ func (a *Generate) manifest() (redacted, manifest *api.Manifest, err error) {
 }
 
 // userManifest returns the manifest contained in the repository.
+// An empty manifest is returned when not found.
 func (a *Generate) userManifest() (manifest *api.Manifest, err error) {
+	manifest = &api.Manifest{}
 	if a.application.Repository == nil {
-		err = &ManifestNotFound{}
 		return
 	}
 	sourceDir, err := a.cloneCode()
@@ -599,7 +600,7 @@ func (a *Generate) userManifest() (manifest *api.Manifest, err error) {
 	f, err := os.Open(file)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = &ManifestNotFound{}
+			err = nil
 		} else {
 			err = wrap(err)
 		}
@@ -608,7 +609,6 @@ func (a *Generate) userManifest() (manifest *api.Manifest, err error) {
 	defer func() {
 		_ = f.Close()
 	}()
-	manifest = &api.Manifest{}
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&manifest.Content)
 	if err == nil {
