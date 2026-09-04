@@ -7,7 +7,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/jortel/go-utils v0.1.5
 	github.com/konveyor/asset-generation v0.2.2
-	github.com/konveyor/tackle2-hub/shared v0.0.0-20260306231449-91eaaa65805c
+	github.com/konveyor/tackle2-hub/shared v0.0.0-20260904131632-98e6f1ae6a5f
 	github.com/onsi/gomega v1.38.2
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -54,9 +54,9 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
-	github.com/stretchr/testify v1.11.0 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
