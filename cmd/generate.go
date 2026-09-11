@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 	"net/url"
 	"os"
 	"path"
@@ -24,6 +25,10 @@ type Map = map[string]any
 // Generate assets action.
 type Generate struct {
 	BaseAction
+	codeDir  string
+	manifest *api.Manifest
+	redacted *api.Manifest
+	tags     []string
 }
 
 // Run executes that action.
@@ -40,15 +45,23 @@ func (a *Generate) Run(d *Data) (err error) {
 	if err != nil {
 		return
 	}
-	addon.Activity(
-		"[Generate] Fetch manifest for application (id=%d): %s",
-		a.application.ID,
-		a.application.Name)
 	if a.application.Assets == nil {
 		err = wrap(
 			&RepositoryNotDefined{
 				Role: "Assets",
 			})
+		return
+	}
+	err = a.fetchTags()
+	if err != nil {
+		return
+	}
+	addon.Activity(
+		"[Generate] Find manifest for application (id=%d): %s",
+		a.application.ID,
+		a.application.Name)
+	err = a.findManifest()
+	if err != nil {
 		return
 	}
 	identity, _, err :=
@@ -88,6 +101,9 @@ func (a *Generate) Run(d *Data) (err error) {
 	if err != nil {
 		return
 	}
+	addon.Activity(
+		"[Generate] Matched generator count=%d",
+		len(generators))
 	for _, gen := range generators {
 		addon.Activity(
 			"[Generate] Using generator (id=%d): %s.",
@@ -343,17 +359,9 @@ func (a *Generate) writeTemplates(templateDir, assetDir string) (err error) {
 
 // values returns the `values` file passed to the generator.
 func (a *Generate) values(gen *api.Generator, params api.Map) (values api.Map, err error) {
-	tags, err := a.tags()
-	if err != nil {
-		return
-	}
-	redacted, manifest, err := a.manifest()
-	if err != nil {
-		return
-	}
 	v := Values{}
 	// redacted (just reported).
-	v.with(&a.application, redacted, tags)
+	v.with(&a.application, a.redacted, a.tags)
 	values, _ = v.inject(gen.Values, params)
 	err = a.attachValues(gen, values)
 	if err != nil {
@@ -361,7 +369,7 @@ func (a *Generate) values(gen *api.Generator, params api.Map) (values api.Map, e
 	}
 	// used.
 	v = Values{}
-	v.with(&a.application, manifest, tags)
+	v.with(&a.application, a.manifest, a.tags)
 	values, injected := v.inject(gen.Values, params)
 	for _, key := range injected {
 		addon.Activity(
@@ -408,13 +416,16 @@ func (a *Generate) attachValues(gen *api.Generator, values api.Map) (err error) 
 	return
 }
 
-// cloneCode gets code repository.
-func (a *Generate) cloneCode() (sourceDir string, err error) {
+// cloneCode clones the code repository as needed.
+func (a *Generate) cloneCode() (err error) {
 	if a.application.Repository == nil {
 		err = wrap(
 			&RepositoryNotDefined{
 				Role: "Source",
 			})
+		return
+	}
+	if a.codeDir != "" {
 		return
 	}
 	identity, _, err :=
@@ -426,7 +437,7 @@ func (a *Generate) cloneCode() (sourceDir string, err error) {
 	if err != nil {
 		return
 	}
-	sourceDir = path.Join(
+	sourceDir := path.Join(
 		SourceDir,
 		strings.Split(
 			path.Base(
@@ -444,7 +455,7 @@ func (a *Generate) cloneCode() (sourceDir string, err error) {
 	if err != nil {
 		return
 	}
-	sourceDir = path.Join(
+	a.codeDir = path.Join(
 		sourceDir,
 		a.application.Repository.Path)
 	return
@@ -510,18 +521,23 @@ func (a *Generate) profiles(requested Profiles) (matched []*api.TargetProfile, e
 	return
 }
 
-// generators returns requested generators.
+// generators returns requested (unique) generators.
 func (a *Generate) generators(requested Profiles) (list []*api.Generator, err error) {
 	profiles, err := a.profiles(requested)
 	if err != nil {
 		return
 	}
+	genIds := make(map[uint]byte)
 	for _, p := range profiles {
 		var gen *api.Generator
 		for _, ref := range p.Generators {
+			if _, found := genIds[ref.ID]; found {
+				continue
+			}
 			gen, err = addon.Generator.Get(ref.ID)
 			if err == nil {
 				list = append(list, gen)
+				genIds[ref.ID] = 1
 			} else {
 				return
 			}
@@ -530,9 +546,10 @@ func (a *Generate) generators(requested Profiles) (list []*api.Generator, err er
 	return
 }
 
-// tags returns an array of tags.
+// fetchTags fetches application tags.
 // format: category=tag.
-func (a *Generate) tags() (tags []string, err error) {
+func (a *Generate) fetchTags() (err error) {
+	var tags []string
 	catList, err := addon.TagCategory.List()
 	if err != nil {
 		return
@@ -555,48 +572,50 @@ func (a *Generate) tags() (tags []string, err error) {
 					tag.Name},
 				"="))
 	}
+	a.tags = tags
 	return
 }
 
-// manifest returns the application manifest.
+// findManifest finds the application manifest.
+// First: fetch the manifest in the inventory.
 // fallback: A file named: manifest.yaml in the source repository.
-func (a *Generate) manifest() (redacted, manifest *api.Manifest, err error) {
-	redacted, err = addon.Application.
+func (a *Generate) findManifest() (err error) {
+	a.redacted, err = addon.Application.
 		Select(a.application.ID).
 		Manifest.
 		Get()
 	if err != nil {
 		if errors.Is(err, &binding.NotFound{}) {
-			redacted, err = a.userManifest()
-			manifest = redacted
+			a.redacted, err = a.codeManifest()
+			a.manifest = a.redacted
 		}
 		return
 	}
-	manifest, err = addon.Manifest.
+	a.manifest, err = addon.Manifest.
 		Decrypted().
 		Injected().
-		Get(redacted.ID)
+		Get(a.redacted.ID)
 	if err != nil {
 		return
 	}
 	addon.Activity(
 		"[Generate] Using manifest id=%d",
-		manifest.ID)
+		a.manifest.ID)
 	return
 }
 
-// userManifest returns the manifest contained in the repository.
+// codeManifest returns the manifest contained in the code repository.
 // An empty manifest is returned when not found.
-func (a *Generate) userManifest() (manifest *api.Manifest, err error) {
+func (a *Generate) codeManifest() (manifest *api.Manifest, err error) {
 	manifest = &api.Manifest{}
 	if a.application.Repository == nil {
 		return
 	}
-	sourceDir, err := a.cloneCode()
+	err = a.cloneCode()
 	if err != nil {
 		return
 	}
-	file := path.Join(sourceDir, "manifest.yaml")
+	file := path.Join(a.codeDir, "manifest.yaml")
 	f, err := os.Open(file)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -611,11 +630,16 @@ func (a *Generate) userManifest() (manifest *api.Manifest, err error) {
 	}()
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&manifest.Content)
-	if err == nil {
-		addon.Activity(
-			"[Generate] Using manifest at: ",
-			file)
+	if errors.Is(err, io.EOF) {
+		err = nil
 	}
+	if err != nil {
+		err = wrap(err)
+		return
+	}
+	addon.Activity(
+		"[Generate] Using manifest at: %s",
+		file)
 	return
 }
 
