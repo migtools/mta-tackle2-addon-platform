@@ -17,6 +17,7 @@ jobs:
   push-quay:
     uses: konveyor/release-tools/.github/workflows/build-push-images.yaml@main
     with:
+      publish: 'false'
       registry: "quay.io/konveyor"
       image_name: "tackle2-addon-platform"
       containerfile: "./Dockerfile"
